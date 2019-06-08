@@ -1,0 +1,156 @@
+---
+title: "DS 6372 Project 1: [DATASET] Analysis"
+author: "Audrene Tiakor, Spencer Fogelman, & Joseph Caguioa"
+date: "6/15/2019"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# For used packages, load on startup.
+package_list <- c("tidyverse", "gridExtra", "plyr", "corrplot", "car")
+lapply(package_list, library, character.only=T)
+```
+
+## Introduction
+
+Lorem ipsum dolor sit amet, causae ornatus dolorem at vim, an quando melius epicurei quo, habemus lobortis cu quo. Ex quem animal vituperata sed. Semper alterum sed an, te dico virtute delectus usu. Ea rebum novum gloriatur vis, vix id prima errem interesset, duis nullam eum ut. Eam movet iuvaret te, mea suscipit convenire interesset te, at inermis philosophia ius.
+
+## Data Description
+
+Lorem ipsum dolor sit amet, ea maiestatis elaboraret instructior sit. Quo choro patrioque id, ea eros oblique liberavisse ius. Te duo mollis disputationi, mel ubique tritani postulant cu, ius no possim audiam persequeris. Est temporibus efficiantur te, tibique invenire expetendis pri an. Ad delenit salutandi est, ornatus neglegentur ad per, pro choro iudico assentior eu.
+
+```{r}
+# Load two files, Training_values and Training_labels, as data.frames.
+dfValues <- read.csv(file='microsoft-data-science-capstone/Training_values.csv', header=T, sep=",")
+dfLabels <- read.csv(file='microsoft-data-science-capstone/Training_labels.csv', header=T, sep=",")
+
+# Add response variable to left side of Training_values and shorten name.
+dfFull <- cbind(dfLabels$heart_disease_mortality_per_100k, dfValues)
+names(dfFull)[names(dfFull) == 'dfLabels$heart_disease_mortality_per_100k'] <- 'heart_disease_mortality_per_100k'
+
+# Remove row_id.
+dfFull <- subset(dfFull, select=-row_id)
+```
+
+```{r}
+# Optional shorten column names by removing *__ category descriptors.
+names(dfFull) = sub("area__|econ__|demo__|health__", "", names(dfFull))
+str(dfFull)
+```
+
+* Note that demo__pct_male can be derived as 1 - demo__pct_female.
+* Adding all 5 demo__pct_[race] columns produces number between .990 and 1.000, as expected. Race proportions explicitly provided.
+* Adding all 4 demo__pct_[education] columns produces number between .990 and 1.000, as expected. Education proportions explicitly provided.
+* This dataset is already presplit from a test set. It is unclear whether the available data points are considered repeated measures based on year, as there is no way to identify individual counties.
+
+# Exploratory Data Analysis
+
+Lorem ipsum dolor sit amet, eu mei putant moderatius. Ea pri commodo prodesset scriptorem, laoreet facilisis iudicabit usu et. Mei etiam animal veritus at, amet signiferumque quo in, cu nec ipsum percipitur. Nominavi invidunt duo in, nam omnesque pericula et, everti convenire sed et. At blandit propriae constituam mel, sit in duis possim.
+
+```{r edaHistograms}
+# Quick exploratory histograms of any numeric variables.
+dfFull %>%
+  keep(is.numeric) %>%
+  gather() %>%
+  ggplot(aes(value)) +
+    facet_wrap(~ key, scales="free") +
+    geom_histogram() +
+    theme(axis.text.x=element_text(size=4, angle=45, vjust=1, hjust=1),
+          axis.text.y=element_text(size=6),
+          strip.text=element_text(size=4, margin=margin()))
+
+# Quick exploratory histograms of any factors.
+dfFull %>%
+  keep(is.factor) %>%
+  gather() %>%
+  ggplot(aes(value)) +
+    facet_wrap(~ key, scales="free") +
+    geom_bar() +
+    theme(axis.text.x=element_text(size=3, angle=45, vjust=1, hjust=1),
+          axis.text.y=element_text(size=6),
+          strip.text=element_text(size=4, margin=margin()))
+```
+
+```{r edaScatterplots}
+# Heart disease mortality with factors.
+pairs(dfFull[,c(1,2,3,34)])
+# Heart disease mortality with employment, insurance, gender, and age variables.
+pairs(dfFull[,c(1,5:11)])
+# Heart disease mortality with race and birth/death rates.
+pairs(dfFull[,c(1,12:16,21:22)])
+# Heart disease mortality with education variables.
+pairs(dfFull[,c(1,17:20)])
+# Heart disease mortality with other health variables.
+pairs(dfFull[,c(1,23:28)])
+pairs(dfFull[,c(1,29:33)])
+```
+
+* Some collinearity shown between race variables because they are proportions.
+* Maybe air_pollution_particulate_matter should be redefined as factor.
+
+```{r edaCorrplot}
+# Correlation plot only takes numeric data. Remove factor variables.
+dfNumeric <- dfFull %>% keep(is.numeric)
+
+# Correlation plot on numeric variables. pairwise.complete.obs ignoring any pairs with NA.
+corrplot(cor(dfNumeric, use="pairwise.complete.obs"), type = "upper", tl.col = "black", tl.srt = 45, tl.cex = 0.5, number.cex = 0.3, number.digits=2, method="color", addCoef.col="white")
+```
+
+```{r edaVif}
+# VIF function from car library.
+#fullModel <- lm(heart_disease_mortality_per_100k~., data=dfFull, singular.ok=T)
+#vif(fullModel)[,3]^2
+alias(lm(heart_disease_mortality_per_100k ~ ., data=dfFull))
+#plot(fullModel)
+#summary(fullModel)
+
+```
+
+# Regression Analysis
+
+## Regression Models: Introduction
+
+"Restatement of problem and overall approach."
+
+### Model Selection
+
+```{r}
+```
+
+### Checking Assumptions
+
+```{r}
+```
+
+### Comparing Competing Models
+
+```{r}
+```
+
+## Parameter Interpretation
+
+## Regression Models: Conclusion
+
+Lorem ipsum dolor sit amet, te his wisi voluptatum. Legimus mentitum senserit ad per. Te cum iudico everti concludaturque, id eam congue primis dolores. Nec at quas augue feugiat, dolor perpetua id sed, ei paulo tritani nec.
+
+-------------------------------
+
+# Secondary Analysis
+
+## 2-Way ANOVA: Introduction
+
+## Main Analysis Content
+
+```{r}
+```
+
+## 2-Way ANOVA / Time Series: Conclusion
+
+
+
+# Appendix
+
+```{r}
+```
