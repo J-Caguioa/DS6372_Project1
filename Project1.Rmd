@@ -49,6 +49,10 @@ str(dfFull)
 
 # Exploratory Data Analysis
 
+```{r missingValues}
+colSums(is.na(dfFull))
+```
+
 For the exploratory data analysis portion of this project, tools such as histograms, heatmaps, and variance of inflation factors will be used. During the exploratory data analysis phase, the distribution of our continuous variables will be address, as well as multicolinearity. Multicolinearity is when there is a presence of very high inter-associations among the explanatory variables(possible predictors). A common occurance of multilinearity can be detected when variables are highly correlated to one another.  The reason why it is important to address the problem of multicolinearity is because if there are high inter-associations among the explanatory vairables, then an statistical inferences made from the data may not be reliable. 
 
 ```{r edaHistograms}
@@ -246,7 +250,12 @@ Independence is assumed in order to run further analysis. Because each county on
 
 ## 2-Way ANOVA: Introduction
 
+As discussed in the earlier EDA, the dataset comes with four factors:
 
+* 'area__rucc': Rural-Urban Continuum Codes, which classify counties into three metropolitan categories (by population size) and six nonmetropolitan categories (by urbanization and metro area adjacency).
+* 'area__urban_influence': Urban Influence Codes, which classify counties into two metropolitan categories (by population size) and ten nonmetropolitan categories (by largest town size and metro/micro adjacency).
+* 'econ__economic_typology': County Typology Codes, which classify counties into "six mutually exclusive categories of economic dependence."
+* 'yr': Indicates data from Year A or Year B.
 
 ## Main Analysis Content
 
