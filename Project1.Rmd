@@ -36,7 +36,7 @@ dfFull <- subset(dfFull, select=-row_id)
 
 ```{r}
 # Optional shorten column names by removing *__ category descriptors.
-names(dfFull) = sub("area__|econ__|demo__|health__", "", names(dfFull))
+# names(dfFull) = sub("area__|econ__|demo__|health__", "", names(dfFull))
 str(dfFull)
 ```
 
@@ -100,13 +100,32 @@ corrplot(cor(dfNumeric, use="pairwise.complete.obs"), type = "upper", tl.col = "
 
 ```{r edaVif}
 # VIF function from car library.
-#fullModel <- lm(heart_disease_mortality_per_100k~., data=dfFull, singular.ok=T)
-#vif(fullModel)[,3]^2
-alias(lm(heart_disease_mortality_per_100k ~ ., data=dfFull))
+fullModel <- lm(heart_disease_mortality_per_100k~., data=dfFull, singular.ok=T)
+vif(fullModel)[,3]^2
+```
+
+An initial attempt at obtaining VIFs results in an error on aliased coefficients, indicating that some variables are likely linearly dependent.
+
+```{r edaVif2}
+ld.vars <- attributes(alias(fullModel)$Complete)$dimnames[[1]]
+ld.vars
 #plot(fullModel)
 #summary(fullModel)
 
 ```
+
+According to alias(), a few levels of area__urban_influence and the variable demo__pct_adults_bachelors_or_higher show linear dependence.
+
+```{r edaVif3}
+drop <- c('demo__pct_adults_bachelors_or_higher', 
+          'area__urban_influence')
+dfPartial <- dfFull[, !(names(dfFull) %in% drop)]
+fullModel <- lm(heart_disease_mortality_per_100k~., data=dfPartial)
+vif(fullModel)[,3]
+```
+
+
+
 
 # Regression Analysis
 
