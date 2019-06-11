@@ -19,7 +19,7 @@ Lorem ipsum dolor sit amet, causae ornatus dolorem at vim, an quando melius epic
 
 ## Data Description
 
-Lorem ipsum dolor sit amet, ea maiestatis elaboraret instructior sit. Quo choro patrioque id, ea eros oblique liberavisse ius. Te duo mollis disputationi, mel ubique tritani postulant cu, ius no possim audiam persequeris. Est temporibus efficiantur te, tibique invenire expetendis pri an. Ad delenit salutandi est, ornatus neglegentur ad per, pro choro iudico assentior eu.
+The data that we are currently working with is called the....
 
 ```{r}
 # Load two files, Training_values and Training_labels, as data.frames.
