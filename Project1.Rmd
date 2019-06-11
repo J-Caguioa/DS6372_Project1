@@ -238,14 +238,22 @@ Lorem ipsum dolor sit amet, te his wisi voluptatum. Legimus mentitum senserit ad
 
 # Secondary Analysis
 
+The full dataset contains information for U.S. counties across two undisclosed years, a and b. However, because the counties themselves are unidentified, it is unclear whether each county is represented by more than one year in the provided training data. (For example, does County X have rows for both Year A and Year B in the original training set? Or is Year A in the training file and Year B in the test file?) Additionally, the span of time between the two years could affect whether one could argue that independence exists between data points. (Across counties, mortality rates may be more similar between 2015 and 2016 than between 2000 and 2016.) In short, true time independence within the data is suspect. 
+
+One could even make a case against spatial independence due to regional elements that might affect known heart disease risk factors, such as statewide smoking regulations or food deserts, but it is assumed that the county classification schema captures these nuances.
+
+Independence is assumed in order to run further analysis. Because each county only has two data points at maximum and it is not possible to match them together, a time series or repeated measures analysis cannot be easily performed. The presence of several factor variables makes a two-way ANOVA the logical next step.
+
 ## 2-Way ANOVA: Introduction
+
+
 
 ## Main Analysis Content
 
 ```{r}
 ```
 
-## 2-Way ANOVA / Time Series: Conclusion
+## 2-Way ANOVA: Conclusion
 
 
 
