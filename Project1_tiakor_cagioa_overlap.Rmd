@@ -110,8 +110,8 @@ An initial attempt at obtaining VIFs results in an error on aliased coefficients
 
 ```{r edaVif2}
 fullModel <- lm(heart_disease_mortality_per_100k~., data=dfFull, singular.ok=T)
-=======
 # Check attributes with aliased coefficients.
+
 ld.vars <- attributes(alias(fullModel)$Complete)$dimnames[[1]]
 ld.vars
 ```
@@ -137,28 +137,20 @@ corrplot(cor(dfNumeric2, use="pairwise.complete.obs"), type = "upper", tl.col = 
 
 ```{r}
 #running vif
-=======
+
 # Remove linearly dependent variables.
 drop <- c('demo__pct_adults_bachelors_or_higher', 
           'area__urban_influence')
 dfPartial <- dfFull[, !(names(dfFull) %in% drop)]
 
 # Build full model with remaining 33 predictors and check VIFs.
->>>>>>> 614d58944d14ddaa0e029963f3e6dc28c9bb3496
-=======
-# Remove linearly dependent variables.
-drop <- c('demo__pct_adults_bachelors_or_higher', 
-          'area__urban_influence')
-dfPartial <- dfFull[, !(names(dfFull) %in% drop)]
-
-# Build full model with remaining 33 predictors and check VIFs.
->>>>>>> 614d58944d14ddaa0e029963f3e6dc28c9bb3496
 fullModel <- lm(heart_disease_mortality_per_100k~., data=dfPartial)
 vif(fullModel)[,3]
 ```
 
 After finding what variables show linear dependence using the alias() function, we removed those variables from our data and proceed to using, the vif function from the car package. When using vif to address colinearity within the data,  the rule of thumb is when a variable has a vif greater than 10, that variable can beremoved from data.Keeping this rul of thumb in mind,  we find two variables that we can remove from our model: demo__pct_non_hispanic_african_american (vif=12.77), and demo__pct_non_hispanic_white (vif=15.70). 
 
+>>>>>>> 614d58944d14ddaa0e029963f3e6dc28c9bb3496
 Most of the demographic variables pertaining to race return VIFs greater than 5, namely for non-Hispanic whites (15.70), non-Hispanic African Americans (12.77), Hispanics (10.40), and American Indian or Alaskan Natives (5.81). In each row racial proportions add up to ~1, so it makes sense that these variables are collinear (for example, minority groups generally stay underrepresented in each county). Previous statistics show that mortality rates differ by race, which suggests that including it could add predictive power. However in order to proceed with a reliable model, other factors often correlated with race can remain in its stead.
 
 ```{r edaVif4}
@@ -181,6 +173,8 @@ plot(fullModel)
 summary(fullModel)
 ```
 
+<<<<<<< HEAD
+>>>>>>> 614d58944d14ddaa0e029963f3e6dc28c9bb3496
 
 ```{r}
 #removing demo__pct_non_hispanic_african_american & demo__pct_non_hispanic_white
