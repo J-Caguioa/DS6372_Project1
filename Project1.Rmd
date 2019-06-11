@@ -15,11 +15,12 @@ lapply(package_list, library, character.only=T)
 
 ## Introduction
 
-Lorem ipsum dolor sit amet, causae ornatus dolorem at vim, an quando melius epicurei quo, habemus lobortis cu quo. Ex quem animal vituperata sed. Semper alterum sed an, te dico virtute delectus usu. Ea rebum novum gloriatur vis, vix id prima errem interesset, duis nullam eum ut. Eam movet iuvaret te, mea suscipit convenire interesset te, at inermis philosophia ius.
+The Microsoft Data Science Capstone dataset was made available on Kaggle in July 2018 (https://www.kaggle.com/nandvard/microsoft-data-science-capstone). Using socioeconomic information aggregated by the United States Department of Agriculture Economic Research Service, the objective is to predict U.S. heart disease mortality (per 100,000 people) at the county level. Considering that heart disease remains the leading global cause of death, investigating risk factors is vital in developing a comprehensive treatment strategy.
 
 ## Data Description
 
-The data that we are currently working with is called the....
+For this project, we are working with the microsoft data science capstone data. Within this data set, there are 33 variables, 3 categorical variables, and 30 continuous variables. The categroical variables are: area__rucc, area__urban__influence, and econ__economic_typology. The area__rucc variable which is the Rural-Urban Continuum codes, forming a classification scheme that distinguishes metropolitan counties by degree of urbanization and adjacentty to a metro area. These counties are in the U.S. are assigned one of 9 codes, which can be found from the USDA Economic Research Service, https://www.ers.usda.gov/data-products/rural-urban-continuum-codes/. The area__urban__influence variable represents the urban influence codes. The codes form a classificantion scheme that distinguishes metropolitan counties by means of population size of their metro area, and nonmetropolitan counties by size of the largest city or town and promixity to metro and micropolitan areas. These codes can be found from the USDA Economic Research Service, https://www.ers.usda.gov/data-products/urban-influence-codes/. Last, the econ__economic_typology variable is known as the county typology codes. These codes classify U.S. counties according to six mutulally exclusive categories of economic dependence and six overlapping categories of policy-relevant themes.These codes can be found at USDA Economic Research Service, https://www.ers.usda.gov/data-products/county-typology-codes.aspx. From the continuous variables there are split into different sections, economic: econ__pct_civilian_labor, econ__pct_unemployment, econ__pct_uninsured_adults, econ__pct_uninsured_children, demographics: demo__pct_female, demo__pct_below_18_years_of_age, demo__pct_aged_65_years_and_older, demo__pct_hispanic, demo__pct_non_hispanic_african_american, demo__pct_non_hispanic_white, demo__pct_american_indian_or_alaskan_native, demo__pct_asian, demo__pct_adults_less_than_a_high_school_diploma, demo__pct_adults_with_high_school_diploma, demo__pct_adults_with_some_college, demo__pct_adults_bachelors_or_higher, demo__birth_rate_per_1k, demo__death_rate_per_1k, health: health__pct_adult_obesity, health__pct_adult_smoking, health__pct_diabetes, health__pct_low_birthweight, health__pct_excessive_drinking, health__pct_physical_inacticity, health__air_pollution_particulate_matter, health__homicides_per_100k, health__motor_vehicle_crash_deaths_per_100k, health__pop_per_dentist, health__pop_per_primary_care_physician, and the year which is split into year a and year b.
+
 
 ```{r}
 # Load two files, Training_values and Training_labels, as data.frames.
@@ -47,7 +48,7 @@ str(dfFull)
 
 # Exploratory Data Analysis
 
-Lorem ipsum dolor sit amet, eu mei putant moderatius. Ea pri commodo prodesset scriptorem, laoreet facilisis iudicabit usu et. Mei etiam animal veritus at, amet signiferumque quo in, cu nec ipsum percipitur. Nominavi invidunt duo in, nam omnesque pericula et, everti convenire sed et. At blandit propriae constituam mel, sit in duis possim.
+For the exploratory data analysis portion of this project, tools such as histograms, heatmaps, and variance of inflation factors will be used. During the exploratory data analysis phase, the distribution of our continuous variables will be address, as well as multicolinearity. Multicolinearity is when there is a presence of very high inter-associations among the explanatory variables(possible predictors). A common occurance of multilinearity can be detected when variables are highly correlated to one another.  The reason why it is important to address the problem of multicolinearity is because if there are high inter-associations among the explanatory vairables, then an statistical inferences made from the data may not be reliable. 
 
 ```{r edaHistograms}
 # Quick exploratory histograms of any numeric variables.
@@ -72,7 +73,7 @@ dfFull %>%
           axis.text.y=element_text(size=6),
           strip.text=element_text(size=4, margin=margin()))
 ```
-
+* I think we should drop the scatterplots and just work with the heatmap and the vif to address multicolinearity. I think that we should do the scatterplots after removing any factors with a high vif, and then doing our model selection.
 ```{r edaScatterplots}
 # Heart disease mortality with factors.
 pairs(dfFull[,c(1,2,3,34)])
@@ -90,7 +91,7 @@ pairs(dfFull[,c(1,29:33)])
 * Some collinearity shown between race variables because they are proportions.
 * Maybe air_pollution_particulate_matter should be redefined as factor.
 
-```{r edaCorrplot}
+```{r edaCorrplot(before)}
 # Correlation plot only takes numeric data. Remove factor variables.
 dfNumeric <- dfFull %>% keep(is.numeric)
 
@@ -98,8 +99,8 @@ dfNumeric <- dfFull %>% keep(is.numeric)
 corrplot(cor(dfNumeric, use="pairwise.complete.obs"), type = "upper", tl.col = "black", tl.srt = 45, tl.cex = 0.5, number.cex = 0.3, number.digits=2, method="color", addCoef.col="white")
 ```
 
-```{r edaVif}
-# VIF function from car library.
+```{r edaVif, eval = FALSE, echo = FALSE}
+# VIF function from car library
 fullModel <- lm(heart_disease_mortality_per_100k~., data=dfFull, singular.ok=T)
 vif(fullModel)[,3]^2
 ```
@@ -107,31 +108,102 @@ vif(fullModel)[,3]^2
 An initial attempt at obtaining VIFs results in an error on aliased coefficients, indicating that some variables are likely linearly dependent.
 
 ```{r edaVif2}
+<<<<<<< HEAD
+fullModel <- lm(heart_disease_mortality_per_100k~., data=dfFull, singular.ok=T)
+=======
+# Check attributes with aliased coefficients.
+>>>>>>> 614d58944d14ddaa0e029963f3e6dc28c9bb3496
 ld.vars <- attributes(alias(fullModel)$Complete)$dimnames[[1]]
 ld.vars
-#plot(fullModel)
-#summary(fullModel)
-
 ```
 
-According to alias(), a few levels of area__urban_influence and the variable demo__pct_adults_bachelors_or_higher show linear dependence.
+According to alias(), a few levels of area__urban_influence and the variable demo__pct_adults_bachelors_or_higher show linear dependence. After dropping these two, VIFs can be obtained from the full model.
 
 ```{r edaVif3}
+<<<<<<< HEAD
+#removing the two variables that show linear dependence 
 drop <- c('demo__pct_adults_bachelors_or_higher', 
           'area__urban_influence')
 dfPartial <- dfFull[, !(names(dfFull) %in% drop)]
+```
+
+```{r edaheatmap(after)}
+#using heatmap visual to see which variables have multicolinarity
+# Correlation plot only takes numeric data. Remove factor variables.
+dfNumeric2 <- dfPartial %>% keep(is.numeric)
+
+# Correlation plot on numeric variables. pairwise.complete.obs ignoring any pairs with NA.
+corrplot(cor(dfNumeric2, use="pairwise.complete.obs"), type = "upper", tl.col = "black", tl.srt = 45, tl.cex = 0.5, number.cex = 0.3, number.digits=2, method="color", addCoef.col="white")
+
+```
+
+```{r}
+#running vif
+=======
+# Remove linearly dependent variables.
+drop <- c('demo__pct_adults_bachelors_or_higher', 
+          'area__urban_influence')
+dfPartial <- dfFull[, !(names(dfFull) %in% drop)]
+
+# Build full model with remaining 33 predictors and check VIFs.
+>>>>>>> 614d58944d14ddaa0e029963f3e6dc28c9bb3496
 fullModel <- lm(heart_disease_mortality_per_100k~., data=dfPartial)
 vif(fullModel)[,3]
 ```
 
+<<<<<<< HEAD
+After finding what variables show linear dependence using the alias() function, we removed those variables from our data and proceed to using, the vif function from the car package. When using vif to address colinearity within the data,  the rule of thumb is when a variable has a vif greater than 10, that variable can beremoved from data.Keeping this rul of thumb in mind,  we find two variables that we can remove from our model: demo__pct_non_hispanic_african_american (vif=12.77), and demo__pct_non_hispanic_white (vif=15.70). 
+=======
+Most of the demographic variables pertaining to race return VIFs greater than 5, namely for non-Hispanic whites (15.70), non-Hispanic African Americans (12.77), Hispanics (10.40), and American Indian or Alaskan Natives (5.81). In each row racial proportions add up to ~1, so it makes sense that these variables are collinear (for example, minority groups generally stay underrepresented in each county). Previous statistics show that mortality rates differ by race, which suggests that including it could add predictive power. However in order to proceed with a reliable model, other factors often correlated with race can remain in its stead.
 
+```{r edaVif4}
+# Remove all race-related variables from dataset.
+drop2 <- c('demo__pct_hispanic', 
+          'demo__pct_non_hispanic_african_american', 
+          'demo__pct_non_hispanic_white', 
+          'demo__pct_american_indian_or_alaskan_native', 
+          'demo__pct_asian')
+dfPartial2 <- dfPartial[, !(names(dfPartial) %in% drop2)]
+
+# Build full model with remaining 26 predictors and check VIFs.
+fullModel2 <- lm(heart_disease_mortality_per_100k~., data=dfPartial2)
+vif(fullModel2)[,3]
+```
+
+```{r edaVif5}
+par(mfrow=c(2,2))
+plot(fullModel)
+summary(fullModel)
+```
+
+>>>>>>> 614d58944d14ddaa0e029963f3e6dc28c9bb3496
+
+```{r}
+#removing demo__pct_non_hispanic_african_american & demo__pct_non_hispanic_white
+drop <- c('demo__pct_non_hispanic_african_american', 
+          'demo__pct_non_hispanic_white','demo__pct_adults_bachelors_or_higher', 
+          'area__urban_influence')
+dfPartial2 <- dfFull[, !(names(dfFull) %in% drop)]
+
+
+```
+
+```{r}
+#rerunning vif after removing demo__pct_non_hispanic_african_american & demo__pct_non_hispanic_white
+fullModel2 <- lm(heart_disease_mortality_per_100k~., data=dfPartial2)
+vif(fullModel2)[,3]
+
+```
+
+After dropping a total of four variables: 'demo__pct_non_hispanic_african_american',  'demo__pct_non_hispanic_white','demo__pct_adults_bachelors_or_higher', and 
+'area__urban_influence' the vif factors of the remaining variables are less than 10. We are now ready to proceed with the regression analysis portion of this project. 
 
 
 # Regression Analysis
 
 ## Regression Models: Introduction
 
-"Restatement of problem and overall approach."
+The main objective is to build a predictive model for heart disease mortality rate using the provided socioeconomic data.
 
 ### Model Selection
 
@@ -141,6 +213,11 @@ vif(fullModel)[,3]
 ### Checking Assumptions
 
 ```{r}
+#scatterplot matrix
+
+#possible transformation if any are needed
+
+#plots of the residuals
 ```
 
 ### Comparing Competing Models
