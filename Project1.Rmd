@@ -15,7 +15,7 @@ lapply(package_list, library, character.only=T)
 
 ## Introduction
 
-Lorem ipsum dolor sit amet, causae ornatus dolorem at vim, an quando melius epicurei quo, habemus lobortis cu quo. Ex quem animal vituperata sed. Semper alterum sed an, te dico virtute delectus usu. Ea rebum novum gloriatur vis, vix id prima errem interesset, duis nullam eum ut. Eam movet iuvaret te, mea suscipit convenire interesset te, at inermis philosophia ius.
+The Microsoft Data Science Capstone dataset was made available on Kaggle in July 2018. Using socioeconomic information aggregated by the United States Department of Agriculture Economic Research Service, the objective is to predict U.S. heart disease mortality (per 100,000 people) at the county level. Considering that heart disease remains the leading global cause of death, investigating risk factors is vital in developing a comprehensive treatment strategy.
 
 ## Data Description
 
@@ -107,21 +107,44 @@ vif(fullModel)[,3]^2
 An initial attempt at obtaining VIFs results in an error on aliased coefficients, indicating that some variables are likely linearly dependent.
 
 ```{r edaVif2}
+# Check attributes with aliased coefficients.
 ld.vars <- attributes(alias(fullModel)$Complete)$dimnames[[1]]
 ld.vars
-#plot(fullModel)
-#summary(fullModel)
-
 ```
 
-According to alias(), a few levels of area__urban_influence and the variable demo__pct_adults_bachelors_or_higher show linear dependence.
+According to alias(), a few levels of area__urban_influence and the variable demo__pct_adults_bachelors_or_higher show linear dependence. After dropping these two, VIFs can be obtained from the full model.
 
 ```{r edaVif3}
+# Remove linearly dependent variables.
 drop <- c('demo__pct_adults_bachelors_or_higher', 
           'area__urban_influence')
 dfPartial <- dfFull[, !(names(dfFull) %in% drop)]
+
+# Build full model with remaining 33 predictors and check VIFs.
 fullModel <- lm(heart_disease_mortality_per_100k~., data=dfPartial)
 vif(fullModel)[,3]
+```
+
+Most of the demographic variables pertaining to race return VIFs greater than 5, namely for non-Hispanic whites (15.70), non-Hispanic African Americans (12.77), Hispanics (10.40), and American Indian or Alaskan Natives (5.81). In each row racial proportions add up to ~1, so it makes sense that these variables are collinear (for example, minority groups generally stay underrepresented in each county). Previous statistics show that mortality rates differ by race, which suggests that including it could add predictive power. However in order to proceed with a reliable model, other factors often correlated with race can remain in its stead.
+
+```{r edaVif4}
+# Remove all race-related variables from dataset.
+drop2 <- c('demo__pct_hispanic', 
+          'demo__pct_non_hispanic_african_american', 
+          'demo__pct_non_hispanic_white', 
+          'demo__pct_american_indian_or_alaskan_native', 
+          'demo__pct_asian')
+dfPartial2 <- dfPartial[, !(names(dfPartial) %in% drop2)]
+
+# Build full model with remaining 26 predictors and check VIFs.
+fullModel2 <- lm(heart_disease_mortality_per_100k~., data=dfPartial2)
+vif(fullModel2)[,3]
+```
+
+```{r edaVif5}
+par(mfrow=c(2,2))
+plot(fullModel)
+summary(fullModel)
 ```
 
 
@@ -131,7 +154,7 @@ vif(fullModel)[,3]
 
 ## Regression Models: Introduction
 
-"Restatement of problem and overall approach."
+The main objective is to build a predictive model for heart disease mortality rate using the provided socioeconomic data.
 
 ### Model Selection
 
