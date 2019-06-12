@@ -260,6 +260,57 @@ As discussed in the earlier EDA, the dataset comes with four factors:
 ## Main Analysis Content
 
 ```{r}
+# Create simplified version of area__rucc on two levels: metro and nonmetro. Alternatively, use linear contrasts to parse.
+dfFull <- mutate(dfFull, area__simple_rucc = ifelse(area__rucc %in% area__rucc[c(1,2,3)], "metro", "nonmetro"))
+dfFull$area__simple_rucc <- as.factor(dfFull$area__simple_rucc)
+```
+
+```{r summaryTable}
+# Function for various summary statistics used to create mean profile plot.
+summarystats <- function(x) {
+  result <- c(length(x), mean(x), sd(x), sd(x)/length(x), min(x), max(x), IQR(x))
+  names(result) <- c("N", "Mean", "SD", "SE", "min", "max", "IQR")
+  return(result)
+}
+
+# Expected table has 2*6 = 12 (simple_rucc * economic_typology) combined levels.
+sumstatsRuccEcon <- aggregate(heart_disease_mortality_per_100k ~ area__simple_rucc*econ__economic_typology, data=dfFull, summarystats)
+sumstatsRuccEcon <- cbind(sumstatsRuccEcon[,1:2], sumstatsRuccEcon[,-(1:2)])
+sumstatsRuccEcon
+
+# Expected table has 2*6 = 12 (yr * economic_typology) combined levels.
+sumstatsEconYear <- aggregate(heart_disease_mortality_per_100k ~ econ__economic_typology*yr, data=dfFull, summarystats)
+sumstatsEconYear <- cbind(sumstatsEconYear[,1:2], sumstatsEconYear[,-(1:2)])
+sumstatsEconYear
+```
+
+
+```{r meanProfilePlot}
+# Mean profile plot for Simplified RUCC and Economic Typology.
+ggplot(sumstatsRuccEcon, aes(x=econ__economic_typology, y=Mean, group=area__simple_rucc, color=area__simple_rucc)) +
+  xlab("Economic Typology") +
+  ylab("County-Level Heart Disease Mortality (per 100k)") +
+  geom_line() +
+  geom_point() +
+  ggtitle("Mean Profile Plot for RUCC and Economic Typology with SD Error Bars") +
+  geom_errorbar(aes(ymin=Mean-SD, ymax=Mean+SD), width=.1) +
+  theme(axis.title.y=element_text(size=9),
+        axis.text=element_text(size=6),
+        axis.ticks=element_blank(),
+        axis.text.x=element_text(angle=45, hjust=1))
+
+# # Mean profile plot for Economic Typology and Year.
+# ggplot(sumstatsEconYear, aes(x=econ__economic_typology, y=Mean, group=yr, color=yr)) +
+#   xlab("Economic Typology") +
+#   ylab("County-Level Heart Disease Mortality (per 100k)") +
+#   geom_line() +
+#   geom_point() +
+#   ggtitle("Mean Profile Plot for Economic Typology and Year with SD Error Bars") +
+#   geom_errorbar(aes(ymin=Mean-SD, ymax=Mean+SD), width=.1) +
+#   theme(axis.title.y=element_text(size=9),
+#         axis.text=element_text(size=6),
+#         axis.ticks=element_blank(),
+#         axis.text.x=element_text(angle=45, hjust=1))
 ```
 
 ## 2-Way ANOVA: Conclusion
