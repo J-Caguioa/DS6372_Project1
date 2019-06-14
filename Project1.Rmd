@@ -38,7 +38,7 @@ dfFull <- subset(dfFull, select=-row_id)
 
 ```{r}
 # Optional shorten column names by removing *__ category descriptors.
-# names(dfFull) = sub("area__|econ__|demo__|health__", "", names(dfFull))
+names(dfFull) = sub("area__|econ__|demo__|health__", "", names(dfFull))
 str(dfFull)
 ```
 
@@ -252,21 +252,33 @@ Independence is assumed in order to run further analysis. Because each county on
 
 As discussed in the earlier EDA, the dataset comes with four factors:
 
-* 'area__rucc': Rural-Urban Continuum Codes, which classify counties into three metropolitan categories (by population size) and six nonmetropolitan categories (by urbanization and metro area adjacency).
-* 'area__urban_influence': Urban Influence Codes, which classify counties into two metropolitan categories (by population size) and ten nonmetropolitan categories (by largest town size and metro/micro adjacency).
-* 'econ__economic_typology': County Typology Codes, which classify counties into "six mutually exclusive categories of economic dependence."
+* 'rucc': Rural-Urban Continuum Codes, which classify counties into three metropolitan categories (by population size) and six nonmetropolitan categories (by urbanization and metro area adjacency).
+* 'urban_influence': Urban Influence Codes, which classify counties into two metropolitan categories (by population size) and ten nonmetropolitan categories (by largest town size and metro/micro adjacency).
+* 'economic_typology': County Typology Codes, which classify counties into "six mutually exclusive categories of economic dependence."
 * 'yr': Indicates data from Year A or Year B.
+
+Of these, the metro/nonmetro divide and economic systems are the most easily understood, so they are selected for analysis. One could reason that variables underlying an area's population size or specialized economic product would have some effect on heart disease mortality. Conducting a two-way ANOVA will show whether these predictors have some interaction effect on the response; in other words, does a discernible simultaneous effect different from the sum of their parts exist?
 
 ## Main Analysis Content
 
+For simplicity, RUCC is recoded based on metropolitan and nonmetropolitan categorization without accounting for population size subcategories or (in the case of nonmetro counties) metro adjacency. Later on the number of potential combinations between pairs of levels increases exponentially with each additional level, so it is helpful to reduce RUCC from nine levels to two at this step.
+
 ```{r}
-# Create simplified version of area__rucc on two levels: metro and nonmetro. Alternatively, use linear contrasts to parse.
-dfFull <- mutate(dfFull, area__simple_rucc = ifelse(area__rucc %in% area__rucc[c(1,2,3)], "metro", "nonmetro"))
-dfFull$area__simple_rucc <- as.factor(dfFull$area__simple_rucc)
+# Create simplified version of rucc on two levels: metro and nonmetro. Default alphabetical levels of RUCC are set with first 3 as metro and last 6 as nonmetro.
+levels(dfFull$rucc)
+dfFull <- mutate(dfFull, simple_rucc = ifelse(rucc %in% rucc[c(1,2,3)], "metro", "nonmetro"))
+dfFull$simple_rucc <- as.factor(dfFull$simple_rucc)
+levels(dfFull$simple_rucc)
+
+# Remove "-dependent" clause from economic typology levels for cleaner HSD table output later due to "A:B-A:B" formatting.
+levels(dfFull$economic_typology) <- sub("-dependent", "", levels(dfFull$economic_typology))
+levels(dfFull$economic_typology)
 ```
 
+Two-way ANOVA has three main assumptions: normality, equality of variance, and independence. The third has already been discussed, so the remaining two are addressed with the following plots.
+
 ```{r summaryTable}
-# Function for various summary statistics used to create mean profile plot.
+# Function for various summary statistics used to create mean profile plot. All following code in this chunk borrowed from Turner's HW3.
 summarystats <- function(x) {
   result <- c(length(x), mean(x), sd(x), sd(x)/length(x), min(x), max(x), IQR(x))
   names(result) <- c("N", "Mean", "SD", "SE", "min", "max", "IQR")
@@ -274,48 +286,127 @@ summarystats <- function(x) {
 }
 
 # Expected table has 2*6 = 12 (simple_rucc * economic_typology) combined levels.
-sumstatsRuccEcon <- aggregate(heart_disease_mortality_per_100k ~ area__simple_rucc*econ__economic_typology, data=dfFull, summarystats)
+sumstatsRuccEcon <- aggregate(heart_disease_mortality_per_100k ~ simple_rucc*economic_typology, data=dfFull, summarystats)
 sumstatsRuccEcon <- cbind(sumstatsRuccEcon[,1:2], sumstatsRuccEcon[,-(1:2)])
 sumstatsRuccEcon
-
-# Expected table has 2*6 = 12 (yr * economic_typology) combined levels.
-sumstatsEconYear <- aggregate(heart_disease_mortality_per_100k ~ econ__economic_typology*yr, data=dfFull, summarystats)
-sumstatsEconYear <- cbind(sumstatsEconYear[,1:2], sumstatsEconYear[,-(1:2)])
-sumstatsEconYear
 ```
 
-
 ```{r meanProfilePlot}
-# Mean profile plot for Simplified RUCC and Economic Typology.
-ggplot(sumstatsRuccEcon, aes(x=econ__economic_typology, y=Mean, group=area__simple_rucc, color=area__simple_rucc)) +
+# Mean profile plot for Simplified RUCC and Economic Typology. Code borrowed from Turner's HW3.
+ggplot(sumstatsRuccEcon, aes(x = economic_typology, y = Mean, group = simple_rucc, color = simple_rucc)) +
   xlab("Economic Typology") +
   ylab("County-Level Heart Disease Mortality (per 100k)") +
   geom_line() +
   geom_point() +
-  ggtitle("Mean Profile Plot for RUCC and Economic Typology with SD Error Bars") +
-  geom_errorbar(aes(ymin=Mean-SD, ymax=Mean+SD), width=.1) +
-  theme(axis.title.y=element_text(size=9),
-        axis.text=element_text(size=6),
-        axis.ticks=element_blank(),
-        axis.text.x=element_text(angle=45, hjust=1))
+  scale_color_manual("Simple RUCC", values=c("darkorange", "darkgreen")) +
+  ggtitle("Mean Profile Plot, SD Error Bars") +
+  geom_errorbar(aes(ymin = Mean-SD, ymax = Mean+SD), width = .1) +
+  theme(axis.title.y = element_text(size = 9),
+        axis.text = element_text(size = 6),
+        axis.ticks = element_blank(),
+        axis.text.x = element_text(angle = 45, hjust = 1))
+```
 
-# # Mean profile plot for Economic Typology and Year.
-# ggplot(sumstatsEconYear, aes(x=econ__economic_typology, y=Mean, group=yr, color=yr)) +
-#   xlab("Economic Typology") +
-#   ylab("County-Level Heart Disease Mortality (per 100k)") +
-#   geom_line() +
-#   geom_point() +
-#   ggtitle("Mean Profile Plot for Economic Typology and Year with SD Error Bars") +
-#   geom_errorbar(aes(ymin=Mean-SD, ymax=Mean+SD), width=.1) +
-#   theme(axis.title.y=element_text(size=9),
-#         axis.text=element_text(size=6),
-#         axis.ticks=element_blank(),
-#         axis.text.x=element_text(angle=45, hjust=1))
+The sizes of the metro and nonmetro standard deviation error bars are relatively similar across all levels of economic typology; there is no significant visual evidence against constant variance.
+
+```{r anovaFit}
+# Full nonadditive 2-way model between simple RUCC and economic typology on heart disease mortality. All following code in this chunk borrowed from Turner's HW3.
+modelRuccEconNonadd <- aov(heart_disease_mortality_per_100k ~ simple_rucc + economic_typology + simple_rucc:economic_typology, data = dfFull)
+
+# Extract fitted values and residuals for easier access.
+fitModelRuccEconNonadd <- data.frame(fitted.values = modelRuccEconNonadd$fitted.values, residuals = modelRuccEconNonadd$residuals)
+
+# Residual vs fitted plot.
+plot1 <- ggplot(fitModelRuccEconNonadd, aes(x = fitted.values, y = residuals)) +
+  xlab("Predicted") +
+  ylab("Residuals") +
+  geom_point()
+
+# QQ residual plot.
+plot2 <- ggplot(fitModelRuccEconNonadd, aes(sample = residuals)) +
+  stat_qq() +
+  geom_abline(intercept = mean(fitModelRuccEconNonadd$residuals), slope = sd(fitModelRuccEconNonadd$residuals))
+
+# Histogram of residuals.
+plot3 <- ggplot(fitModelRuccEconNonadd, aes(x = residuals)) +
+  geom_histogram(aes(y = ..density..), binwidth = 20, color = "black", fill = "gray") +
+  geom_density(alpha = .1, fill = "red")
+
+# Display residual diagnostics.
+grid.arrange(plot1, plot2, plot3, ncol=3)
+```
+
+The residuals in the Q-Q plot generally fall along the diagonal with some deviation at the edges. The residual histogram shows minor left skew based on the x-axis.
+
+```{r diagnostic}
+# Obtain R's default diagnostic plots.
+par(mfrow=c(2,2))
+plot(modelRuccEconNonadd)
+```
+
+The residuals and standardized residuals are generally clustered in a cloud. From all these plots, there is not significant evidence against normality. Furthermore, there are no major outliers.
+
+In summary, all assumptions are met. Next, does an interaction effect exist? If so, the interaction between simplified RUCC and economic typology will be looked at more closely. If not, the main effects will be studied instead.
+
+```{r type3}
+# Type 3 SS F-table.
+car::Anova(modelRuccEconNonadd, type=3)
+```
+
+The type-III sum of squares F table shows that economic typology is significant as a main effect (p-value 2.459e-06). But more interestingly, the interaction between simplified RUCC and economic typology is also significant (p-value 1.117e-06). Considering these predictors alone, heart disease mortality rate will change for one based on the level of the other.
+
+```{r}
+# Full TukeyHSD call with all 66 combinations.
+fullTukey <- TukeyHSD(modelRuccEconNonadd, "simple_rucc:economic_typology", conf.level = 0.95)
+fullTukey <- as.data.frame(fullTukey$`simple_rucc:economic_typology`)
+fullTukey
+
+# Use adjusted p-value as filter to retrieve rows where p adj is below familywise error rate of 0.05.
+sigTukey <- TukeyHSD(modelRuccEconNonadd, "simple_rucc:economic_typology", conf.level = 0.95)
+sigTukey <- sigTukey$`simple_rucc:economic_typology`
+sigTukey <- as.data.frame(sigTukey)
+padj <- sigTukey$`p adj`
+sigTukey <- sigTukey[padj < 0.05, ]
+sigTukey
+
+fullTukey <- fullTukey[order(fullTukey$`p adj`), ]
+fullTukey
+```
+
+Of all 66 possible two-point combinations (reference the 12 points in the earlier mean profile plot), 39 pairs return a significant difference in mean heart disease mortality rates. In other words, 59% of the pairwise intersections of levels in RUCC and economic typology have significantly different means.
+
+Around what value does the difference between means in mortality rates start becoming significant? Sorting the full list of confidence intervals by Tukey-adjusted p-values helps paint the picture, but it is not a clear-cut answer. For example, an absolute value difference of 17.13 (nonmetro:Recreation-nonmetro:Farm, adj p-value 5.12e-03) is significant but a difference of 27.91 (metro:Mining-nonmetro:Farm, adj p-value 1.60e-01) is not. This particular instance could partly be explained by the comparatively smaller sample size of metro:Mining, shown in the summary statistics table, resulting in a wider confidence interval. In general larger differences in means, especially 20 deaths per 100k and above, are more likely to be significant.
+
+```{r tukeyPlot}
+# ggplot2 version of plot(TukeyHSD), with code borrowed from 
+# https://stackoverflow.com/questions/33644034/how-to-visualize-pairwise-comparisons-with-ggplot2?rq=1.
+# cut() intervals adjusted to accommodate p-values of 0.00e+00 or 1.00e+00.
+fullTukey$pair <- rownames(fullTukey)
+ggplot(fullTukey, aes(color = cut(`p adj`, c(-0.1, 0.05, 1.1),
+                                label = c("p<0.05", "Non-Sig")))) +
+  geom_hline(yintercept = 0, lty = "11", color = "grey30") +
+  geom_errorbar(aes(pair, ymin = lwr, ymax = upr), width = 0.01) +
+  geom_point(aes(pair, diff)) +
+  labs(color="") + 
+  xlab("Pair") +
+  ylab("County-Level Heart Disease Mortality Rate (per 100k) Difference") +
+  ggtitle("TukeyHSD Confidence Intervals of Pairwise Differences") +
+  scale_color_manual("Significance", values=c("#00BA38", "darkgray")) +
+  coord_flip() +
+  theme(axis.text.y = element_text(size=4),
+        axis.ticks = element_blank(),
+        axis.title.x = element_text(size=8))
 ```
 
 ## 2-Way ANOVA: Conclusion
 
+While plotting all 66 TukeyHSD pairwise confidence intervals demonstrates exactly which intersections of levels differ, the means profile plot used in the equality of variance assumption earlier provides an intuitive macroscopic view of understanding the data. 
 
+For example, the nonmetropolitan heart disease mortality rate is generally higher than for metropolitan counties except in farm-dependent economic systems, an epitome of the predictor interaction. (Although the difference in means between metro and nonmetro farming is not statistically significant at p-value 9.72e-01, the trend itself is interesting to note). Why might this be? Perhaps socioeconomic factors generally associated with nonmetropolitan areas, such as lower access to healthcare, are trumped by the nonsedentary lifestyle of farm life. Mining could be considered comparably active, and yet mining nonmetropolitan counties have among the highest mortality rates. Maybe pollution associated with the work overrides any potential health benefits. Some of these socioeconomic factors are captured elsewhere in the full dataset, so verifying whether such correlations actually exist could be helpful in logically explaining the 2-way ANOVA results when considering RUCC and economic typology as the only predictors.
+
+Another interesting example is recreation-dependent systems, defined, among other things, by higher proportional employment in entertainment, accommodations, and food and beverage services. For both metro and nonmetro (think tourist hotspots like the San Francisco Bay Area and Yellowstone National Park, respectively) counties, the recreation economic typology has generally lower heart disease mortality rates (and smaller standard deviations) than other typologies, regardless of metro/nonmetro categorization. Is all work and no play related to more heart-related deaths?
+
+This single closeup view at two predictors in vacuum produces more questions than answers, paving the way for further analysis. Whether one lives in a metropolitan or nonmetropolitan county, and the major economic force of the area have a combined effect on the heart disease mortality rate. What other variables, both within and outside of this dataset, could this apply to?
 
 # Appendix
 
