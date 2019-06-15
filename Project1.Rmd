@@ -123,8 +123,8 @@ ld.vars
 According to alias(), a few levels of area__urban_influence and the variable demo__pct_adults_bachelors_or_higher show linear dependence. After dropping these two, VIFs can be obtained from the full model.
 
 ```{r edaVif3}
-#removing the two variables that show linear dependence 
-drop <- c('demo__pct_adults_bachelors_or_higher', 
+#removing the two variables that show linear dependence
+drop <- c('demo__pct_adults_bachelors_or_higher',
           'area__urban_influence')
 dfPartial <- dfFull[, !(names(dfFull) %in% drop)]
 ```
@@ -143,7 +143,7 @@ corrplot(cor(dfNumeric2, use="pairwise.complete.obs"), type = "upper", tl.col = 
 #running vif
 =======
 # Remove linearly dependent variables.
-drop <- c('demo__pct_adults_bachelors_or_higher', 
+drop <- c('demo__pct_adults_bachelors_or_higher',
           'area__urban_influence')
 dfPartial <- dfFull[, !(names(dfFull) %in% drop)]
 
@@ -151,7 +151,7 @@ dfPartial <- dfFull[, !(names(dfFull) %in% drop)]
 >>>>>>> 614d58944d14ddaa0e029963f3e6dc28c9bb3496
 =======
 # Remove linearly dependent variables.
-drop <- c('demo__pct_adults_bachelors_or_higher', 
+drop <- c('demo__pct_adults_bachelors_or_higher',
           'area__urban_influence')
 dfPartial <- dfFull[, !(names(dfFull) %in% drop)]
 
@@ -167,10 +167,10 @@ Most of the demographic variables pertaining to race return VIFs greater than 5,
 
 ```{r edaVif4}
 # Remove all race-related variables from dataset.
-drop2 <- c('demo__pct_hispanic', 
-          'demo__pct_non_hispanic_african_american', 
-          'demo__pct_non_hispanic_white', 
-          'demo__pct_american_indian_or_alaskan_native', 
+drop2 <- c('demo__pct_hispanic',
+          'demo__pct_non_hispanic_african_american',
+          'demo__pct_non_hispanic_white',
+          'demo__pct_american_indian_or_alaskan_native',
           'demo__pct_asian')
 dfPartial2 <- dfPartial[, !(names(dfPartial) %in% drop2)]
 
@@ -188,8 +188,8 @@ summary(fullModel)
 
 ```{r}
 #removing demo__pct_non_hispanic_african_american & demo__pct_non_hispanic_white
-drop <- c('demo__pct_non_hispanic_african_american', 
-          'demo__pct_non_hispanic_white','demo__pct_adults_bachelors_or_higher', 
+drop <- c('demo__pct_non_hispanic_african_american',
+          'demo__pct_non_hispanic_white','demo__pct_adults_bachelors_or_higher',
           'area__urban_influence')
 dfPartial2 <- dfFull[, !(names(dfFull) %in% drop)]
 
@@ -263,7 +263,7 @@ Of these, the metro/nonmetro divide and economic systems are the most easily und
 
 For simplicity, RUCC is recoded based on metropolitan and nonmetropolitan categorization without accounting for population size subcategories or (in the case of nonmetro counties) metro adjacency. Later on the number of potential combinations between pairs of levels increases exponentially with each additional level, so it is helpful to reduce RUCC from nine levels to two at this step.
 
-```{r}
+```{r recode}
 # Create simplified version of rucc on two levels: metro and nonmetro. Default alphabetical levels of RUCC are set with first 3 as metro and last 6 as nonmetro.
 levels(dfFull$rucc)
 dfFull <- mutate(dfFull, simple_rucc = ifelse(rucc %in% rucc[c(1,2,3)], "metro", "nonmetro"))
@@ -293,6 +293,7 @@ sumstatsRuccEcon
 
 ```{r meanProfilePlot}
 # Mean profile plot for Simplified RUCC and Economic Typology. Code borrowed from Turner's HW3.
+png("meanProfilePlot.png", width = 500, height = 350)
 ggplot(sumstatsRuccEcon, aes(x = economic_typology, y = Mean, group = simple_rucc, color = simple_rucc)) +
   xlab("Economic Typology") +
   ylab("County-Level Heart Disease Mortality (per 100k)") +
@@ -305,6 +306,7 @@ ggplot(sumstatsRuccEcon, aes(x = economic_typology, y = Mean, group = simple_ruc
         axis.text = element_text(size = 6),
         axis.ticks = element_blank(),
         axis.text.x = element_text(angle = 45, hjust = 1))
+dev.off()
 ```
 
 The sizes of the metro and nonmetro standard deviation error bars are relatively similar across all levels of economic typology; there is no significant visual evidence against constant variance.
@@ -333,15 +335,19 @@ plot3 <- ggplot(fitModelRuccEconNonadd, aes(x = residuals)) +
   geom_density(alpha = .1, fill = "red")
 
 # Display residual diagnostics.
+png("residualDiagnostics.png", width = 500, height = 350)
 grid.arrange(plot1, plot2, plot3, ncol=3)
+dev.off()
 ```
 
 The residuals in the Q-Q plot generally fall along the diagonal with some deviation at the edges. The residual histogram shows minor left skew based on the x-axis.
 
 ```{r diagnostic}
 # Obtain R's default diagnostic plots.
+png("residualDefaultPlots.png", width = 350, height = 350)
 par(mfrow=c(2,2))
 plot(modelRuccEconNonadd)
+dev.off()
 ```
 
 The residuals and standardized residuals are generally clustered in a cloud. From all these plots, there is not significant evidence against normality. Furthermore, there are no major outliers.
@@ -382,6 +388,7 @@ Around what value does the difference between means in mortality rates start bec
 # https://stackoverflow.com/questions/33644034/how-to-visualize-pairwise-comparisons-with-ggplot2?rq=1.
 # cut() intervals adjusted to accommodate p-values of 0.00e+00 or 1.00e+00.
 fullTukey$pair <- rownames(fullTukey)
+png("tukeyGGPlot.png", width = 500, height = 350)
 ggplot(fullTukey, aes(color = cut(`p adj`, c(-0.1, 0.05, 1.1),
                                 label = c("p<0.05", "Non-Sig")))) +
   geom_hline(yintercept = 0, lty = "11", color = "grey30") +
@@ -396,6 +403,7 @@ ggplot(fullTukey, aes(color = cut(`p adj`, c(-0.1, 0.05, 1.1),
   theme(axis.text.y = element_text(size=4),
         axis.ticks = element_blank(),
         axis.title.x = element_text(size=8))
+dev.off()
 ```
 
 ## 2-Way ANOVA: Conclusion
